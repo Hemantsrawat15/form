@@ -1,0 +1,53 @@
+# ==================================
+#       GENERAL & OS FILES
+# ==================================
+.DS_Store
+.vscode/
+.idea/
+*.log
+*.lock
+
+# ==================================
+#          FRONTEND (Node.js / React)
+# ==================================
+# Dependencies
+frontend/node_modules/
+
+# Build output
+frontend/dist/
+frontend/build/
+
+# Logs
+frontend/npm-debug.log*
+frontend/yarn-debug.log*
+frontend/yarn-error.log*
+
+# Environment variables
+frontend/.env
+frontend/.env.local
+frontend/.env.development.local
+frontend/.env.test.local
+frontend/.env.production.local
+
+# ==================================
+#           BACKEND (PHP / Composer)
+# ==================================
+# Composer dependencies
+backend/vendor/
+
+# PHPUnit cache
+backend/phpunit.result.cache
+backend/coverage/
+
+# Any environment files for the backend
+backend/.env
+
+# Local development server log (if any)
+# You might not have this, but it's good practice
+backend/php.log
+
+# ==================================
+#           STORAGE (PDFs)
+# ==================================
+# Do not commit generated PDF files
+backend/storage/pdfs/
