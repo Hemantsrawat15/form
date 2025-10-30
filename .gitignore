@@ -33,7 +33,6 @@ frontend/.env.production.local
 #           BACKEND (PHP / Composer)
 # ==================================
 # Composer dependencies
-backend/vendor/
 
 # PHPUnit cache
 backend/phpunit.result.cache
