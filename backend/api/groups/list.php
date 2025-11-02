@@ -1,5 +1,5 @@
-<?php
-require_once __DIR__ . '/../cors.php';
+<?php 
+require_once __DIR__ . '/../cors.php'; 
 header('Content-Type: application/json; charset=UTF-8');
 
 require_once '../config/database.php';
@@ -16,18 +16,20 @@ if (!$user_id) {
 
 $db = new Database();
 $conn = $db->getConnection();
-// Make sure you have added a user_id column to your groups table
-$query = "SELECT g.id, g.group_name, g.description, COUNT(f.id) as form_count 
-          FROM `groups` g 
-          LEFT JOIN forms f ON g.id = f.group_id 
-          WHERE g.user_id = ? 
-          GROUP BY g.id ORDER BY g.group_name";
 
-$stmt = $conn->prepare($query);
-$stmt->bind_param("i", $user_id);
-$stmt->execute();
-$result = $stmt->get_result();
+// Modified query to show ALL groups with creator information
+$query = "SELECT g.id, g.group_name, g.description, g.created_by, 
+          u.username as creator_username, u.full_name as creator_name,
+          COUNT(f.id) as form_count
+          FROM groups g
+          LEFT JOIN users u ON g.created_by = u.id
+          LEFT JOIN forms f ON g.id = f.group_id
+          GROUP BY g.id 
+          ORDER BY g.group_name";
+
+$result = $conn->query($query);
 $groups = $result->fetch_all(MYSQLI_ASSOC);
+
 $conn->close();
 
 echo json_encode($groups);

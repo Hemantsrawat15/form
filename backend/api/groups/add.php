@@ -1,12 +1,10 @@
-<?php
-// This must be the very first line
-require_once __DIR__ . '/../cors.php';
+<?php 
+require_once __DIR__ . '/../cors.php'; 
 header('Content-Type: application/json; charset=UTF-8');
 
 require_once '../config/database.php';
 require_once '../config/jwt_handler.php';
 
-// 1. Authenticate the user and get their ID
 $jwt_handler = new JwtHandler();
 $user_id = $jwt_handler->getUserId();
 
@@ -16,7 +14,6 @@ if (!$user_id) {
     exit();
 }
 
-// 2. Ensure the request method is POST
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
     echo json_encode(["success" => false, "message" => "Method Not Allowed"]);
@@ -27,33 +24,30 @@ $db = new Database();
 $conn = $db->getConnection();
 $data = json_decode(file_get_contents("php://input"));
 
-// 3. Validate the incoming data
 if (empty($data->group_name)) {
     http_response_code(400);
     echo json_encode(["success" => false, "message" => "Group name cannot be empty."]);
     exit();
 }
 
-// 4. Prepare and execute the database query
-$query = "INSERT INTO `groups` (user_id, group_name, description) VALUES (?, ?, ?)";
+// Updated query - now using created_by instead of user_id
+$query = "INSERT INTO groups (created_by, group_name, description) VALUES (?, ?, ?)";
 
 try {
     $stmt = $conn->prepare($query);
-
-    // Sanitize input
+    
     $group_name = htmlspecialchars(strip_tags($data->group_name));
     $description = isset($data->description) ? htmlspecialchars(strip_tags($data->description)) : '';
-
-    // Bind the logged-in user's ID to the new group
+    
+    // Store who created it, but don't restrict access
     $stmt->bind_param("iss", $user_id, $group_name, $description);
-
-    // 5. Respond with success or failure
+    
     if ($stmt->execute()) {
-        http_response_code(201); // 201 Created
+        http_response_code(201);
         echo json_encode([
             "success" => true, 
-            "message" => "Group created successfully.",
-            "group_id" => $conn->insert_id // Send back the ID of the new group
+            "message" => "Group created successfully. This group is now accessible to all users.",
+            "group_id" => $conn->insert_id
         ]);
     } else {
         throw new Exception("Database execution failed.");

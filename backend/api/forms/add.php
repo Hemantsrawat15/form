@@ -1,9 +1,11 @@
-<?php
+<?php 
+require_once __DIR__ . '/../cors.php';
+header('Content-Type: application/json; charset=UTF-8');
+
 require_once '../config/database.php';
 require_once '../config/jwt_handler.php';
 
 $jwt_handler = new JwtHandler();
-
 if (!$jwt_handler->getUserId()) {
     http_response_code(401);
     echo json_encode(["success" => false, "message" => "Unauthorized"]);
@@ -34,6 +36,7 @@ $stmt = $conn->prepare($query);
 
 $group_id = (int)$form_data->group_id;
 $form_name = htmlspecialchars(strip_tags($form_data->form_name));
+
 // The form_template is an object, so we re-encode it as a string for the DB
 $form_template_json = json_encode($form_data->form_template);
 
