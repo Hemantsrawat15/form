@@ -157,6 +157,8 @@ if (str_contains(strtolower($form_name), 'indent check list')) {
         }
     }
     $final_html = $doc->saveHTML();
+    // Remove XML declaration
+    $final_html = str_replace('<?xml encoding="utf-8" ?>', '', $final_html);
 
 } elseif (str_contains(strtolower($form_name), 'drona connectivity')) {
     // Handle DRONA Connectivity Form
@@ -245,6 +247,8 @@ if (str_contains(strtolower($form_name), 'indent check list')) {
     }
     
     $final_html = $doc->saveHTML();
+    // Remove XML declaration
+    $final_html = str_replace('<?xml encoding="utf-8" ?>', '', $final_html);
 
 } elseif (str_contains(strtolower($form_name), 'home town') || str_contains(strtolower($form_name), 'change of home')) {
     // Handle Change of Home Town Form
@@ -291,21 +295,8 @@ if (str_contains(strtolower($form_name), 'indent check list')) {
     }
     
     $final_html = $doc->saveHTML();
-
-} elseif (str_contains(strtolower($form_name), 'leave application')) {
-    // Handle Leave Application Form
-    
-    $fieldIndex = 0;
-    $final_html = preg_replace_callback(
-        "/<span class='field'(.*?)><\/span>/",
-        function ($matches) use (&$fieldIndex, $submission_data) {
-            $fieldIndex++;
-            $inputName = "field-{$fieldIndex}";
-            $value = isset($submission_data[$inputName]) ? htmlspecialchars($submission_data[$inputName]) : '';
-            return "<span class='field'{$matches[1]}>{$value}</span>";
-        },
-        $final_html
-    );
+    // Remove XML declaration
+    $final_html = str_replace('<?xml encoding="utf-8" ?>', '', $final_html);
 
 } elseif (str_contains(strtolower($form_name), 'permanent identity') || str_contains(strtolower($form_name), 'identity card')) {
     // Handle Permanent Identity Card Application Form
@@ -373,6 +364,8 @@ if (str_contains(strtolower($form_name), 'indent check list')) {
     }
     
     $final_html = $doc->saveHTML();
+    // Remove XML declaration
+    $final_html = str_replace('<?xml encoding="utf-8" ?>', '', $final_html);
 
 } elseif (str_contains(strtolower($form_name), 'student trainee') || str_contains(strtolower($form_name), 'trainee at cfees')) {
     // Handle Student Trainee Form
@@ -419,6 +412,8 @@ if (str_contains(strtolower($form_name), 'indent check list')) {
     }
     
     $final_html = $doc->saveHTML();
+    // Remove XML declaration
+    $final_html = str_replace('<?xml encoding="utf-8" ?>', '', $final_html);
 
 } elseif (str_contains(strtolower($form_name), 'pensioners') || str_contains(strtolower($form_name), 'pensioner')) {
     // Handle Pensioners Form
@@ -465,8 +460,195 @@ if (str_contains(strtolower($form_name), 'indent check list')) {
     }
     
     $final_html = $doc->saveHTML();
+    // Remove XML declaration
+    $final_html = str_replace('<?xml encoding="utf-8" ?>', '', $final_html);
 
-} elseif (str_contains(strtolower($form_name), 'registration') || 
+}
+elseif (str_contains(strtolower($form_name), 'leave application - director approval') || str_contains(strtolower($form_name), 'अवकाश')) {
+    // Handle Hindi Leave Application
+    
+    $doc = new DOMDocument();
+    libxml_use_internal_errors(true);
+    @$doc->loadHTML('<?xml encoding="utf-8" ?>' . $html_template, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
+    libxml_clear_errors();
+    $xpath = new DOMXPath($doc);
+    
+    // Handle regular fields (span with class 'field')
+    $fieldIndex = 0;
+    $fieldSpans = $xpath->query("//span[contains(@class, 'field')]");
+    foreach ($fieldSpans as $span) {
+        $fieldIndex++;
+        $inputName = "field-{$fieldIndex}";
+        $value = isset($submission_data[$inputName]) ? htmlspecialchars($submission_data[$inputName]) : '';
+        $span->nodeValue = $value;
+    }
+    
+    // Handle textarea fields (div with class 'textarea-field')
+    $textareaIndex = 0;
+    $textareaDivs = $xpath->query("//div[@class='textarea-field']");
+    foreach ($textareaDivs as $div) {
+        $textareaIndex++;
+        $inputName = "textarea-{$textareaIndex}";
+        $value = isset($submission_data[$inputName]) ? htmlspecialchars($submission_data[$inputName]) : '';
+        
+        // Clear existing content
+        while ($div->firstChild) {
+            $div->removeChild($div->firstChild);
+        }
+        
+        // Add new content with line breaks
+        if ($value) {
+            $lines = explode("\n", $value);
+            foreach ($lines as $i => $line) {
+                $div->appendChild($doc->createTextNode($line));
+                if ($i < count($lines) - 1) {
+                    $div->appendChild($doc->createElement('br'));
+                }
+            }
+        }
+    }
+    
+    $final_html = $doc->saveHTML();
+    // Remove XML declaration
+    $final_html = str_replace('<?xml encoding="utf-8" ?>', '', $final_html);
+}elseif (str_contains(strtolower($form_name), 'leave application')) {
+    // Handle Leave Application Form
+    
+    $fieldIndex = 0;
+    $final_html = preg_replace_callback(
+        "/<span class='field'(.*?)><\/span>/",
+        function ($matches) use (&$fieldIndex, $submission_data) {
+            $fieldIndex++;
+            $inputName = "field-{$fieldIndex}";
+            $value = isset($submission_data[$inputName]) ? htmlspecialchars($submission_data[$inputName]) : '';
+            return "<span class='field'{$matches[1]}>{$value}</span>";
+        },
+        $final_html
+    );
+
+}
+elseif (str_contains(strtolower($form_name), 'cars blank format')) {
+    // Handle DRDO Forms Collection (Multi-page form with landscape pages)
+    
+    $doc = new DOMDocument();
+    libxml_use_internal_errors(true);
+    @$doc->loadHTML('<?xml encoding="utf-8" ?>' . $html_template, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
+    libxml_clear_errors();
+    $xpath = new DOMXPath($doc);
+    
+    // Handle regular fields (span with class 'field')
+    $fieldIndex = 0;
+    $fieldSpans = $xpath->query("//span[@class='field']");
+    foreach ($fieldSpans as $span) {
+        $fieldIndex++;
+        $inputName = "field-{$fieldIndex}";
+        $value = isset($submission_data[$inputName]) ? htmlspecialchars($submission_data[$inputName]) : '';
+        $span->nodeValue = $value;
+    }
+    
+    // Handle textarea fields (div with class 'textarea-field')
+    $textareaIndex = 0;
+    $textareaDivs = $xpath->query("//div[@class='textarea-field']");
+    foreach ($textareaDivs as $div) {
+        $textareaIndex++;
+        $inputName = "textarea-{$textareaIndex}";
+        $value = isset($submission_data[$inputName]) ? htmlspecialchars($submission_data[$inputName]) : '';
+        
+        // Clear existing content
+        while ($div->firstChild) {
+            $div->removeChild($div->firstChild);
+        }
+        
+        // Add new content with line breaks
+        if ($value) {
+            $lines = explode("\n", $value);
+            foreach ($lines as $i => $line) {
+                $div->appendChild($doc->createTextNode($line));
+                if ($i < count($lines) - 1) {
+                    $div->appendChild($doc->createElement('br'));
+                }
+            }
+        }
+    }
+    
+    $final_html = $doc->saveHTML();
+    // Remove XML declaration
+    $final_html = str_replace('<?xml encoding="utf-8" ?>', '', $final_html);
+
+} elseif (str_contains(strtolower($form_name), 'detention certificate') || 
+          str_contains(strtolower($form_name), 'detention') ||
+          str_contains(strtolower($form_name), 'डिटेन्शन')) {
+    // Handle Detention Certificate (Hindi/English bilingual form)
+    
+    $doc = new DOMDocument();
+    libxml_use_internal_errors(true);
+    @$doc->loadHTML('<?xml encoding="utf-8" ?>' . $html_template, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
+    libxml_clear_errors();
+    $xpath = new DOMXPath($doc);
+    
+    // Handle regular fields (span with class 'field' or contains 'field')
+    $fieldIndex = 0;
+    $fieldSpans = $xpath->query("//span[contains(@class, 'field')]");
+    foreach ($fieldSpans as $span) {
+        $fieldIndex++;
+        $inputName = "field-{$fieldIndex}";
+        $value = isset($submission_data[$inputName]) ? htmlspecialchars($submission_data[$inputName]) : '';
+        $span->nodeValue = $value;
+    }
+    
+    $final_html = $doc->saveHTML();
+    // Remove XML declaration
+    $final_html = str_replace('<?xml encoding="utf-8" ?>', '', $final_html);
+
+}elseif (str_contains(strtolower($form_name), 'temporary duty') || str_contains(strtolower($form_name), 'move claim')) {
+    // Handle Claim for Move on Temporary Duty
+    
+    $doc = new DOMDocument();
+    libxml_use_internal_errors(true);
+    @$doc->loadHTML('<?xml encoding="utf-8" ?>' . $html_template, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
+    libxml_clear_errors();
+    $xpath = new DOMXPath($doc);
+    
+    // Handle regular fields (span with class 'field')
+    $fieldIndex = 0;
+    $fieldSpans = $xpath->query("//span[contains(@class, 'field')]");
+    foreach ($fieldSpans as $span) {
+        $fieldIndex++;
+        $inputName = "field-{$fieldIndex}";
+        $value = isset($submission_data[$inputName]) ? htmlspecialchars($submission_data[$inputName]) : '';
+        $span->nodeValue = $value;
+    }
+    
+    // Handle textarea fields (div with class 'textarea-field')
+    $textareaIndex = 0;
+    $textareaDivs = $xpath->query("//div[@class='textarea-field']");
+    foreach ($textareaDivs as $div) {
+        $textareaIndex++;
+        $inputName = "textarea-{$textareaIndex}";
+        $value = isset($submission_data[$inputName]) ? htmlspecialchars($submission_data[$inputName]) : '';
+        
+        // Clear existing content
+        while ($div->firstChild) {
+            $div->removeChild($div->firstChild);
+        }
+        
+        // Add new content with line breaks
+        if ($value) {
+            $lines = explode("\n", $value);
+            foreach ($lines as $i => $line) {
+                $div->appendChild($doc->createTextNode($line));
+                if ($i < count($lines) - 1) {
+                    $div->appendChild($doc->createElement('br'));
+                }
+            }
+        }
+    }
+    
+    $final_html = $doc->saveHTML();
+    // Remove XML declaration
+    $final_html = str_replace('<?xml encoding="utf-8" ?>', '', $final_html);
+
+}elseif (str_contains(strtolower($form_name), 'registration') || 
           str_contains(strtolower($form_name), 'aebas') ||
           str_contains(strtolower($form_name), 'biometric') ||
           str_contains(strtolower($form_name), 'e-portal')) {
@@ -509,6 +691,8 @@ if (str_contains(strtolower($form_name), 'indent check list')) {
     }
     
     $final_html = $doc->saveHTML();
+    // Remove XML declaration
+    $final_html = str_replace('<?xml encoding="utf-8" ?>', '', $final_html);
 }
 
 // 6. Save Submission Record (with compressed photo)
@@ -526,19 +710,29 @@ if (!$stmt_insert->execute()) {
 $submission_id = $stmt_insert->insert_id;
 $stmt_insert->close();
 
-// 7. Generate and Stream PDF with Hindi support
+// 7. Generate and Stream PDF with Hindi/Devanagari support
 try {
-    // Default font for Hindi support - use DejaVu Sans for all forms
+    // Detect if form contains Hindi/Devanagari text
+    $hasHindi = (
+        str_contains(strtolower($form_name), 'detention') ||
+        str_contains(strtolower($form_name), 'डिटेन्शन') ||
+        preg_match('/[\x{0900}-\x{097F}]/u', $final_html)
+    );
+    
+    // Use DejaVu Sans (has basic Devanagari support built-in)
     $default_font = 'dejavusans';
-
+    
+    // Adjust margins for Detention Certificate
+    $isDetentionCert = str_contains(strtolower($form_name), 'detention');
+    
     $mpdf = new \Mpdf\Mpdf([
         'mode' => 'utf-8',
         'format' => 'A4',
         'default_font' => $default_font,
-        'margin_left' => 15,
-        'margin_right' => 15,
-        'margin_top' => 15,
-        'margin_bottom' => 15,
+        'margin_left' => $isDetentionCert ? 28 : 15,   // 2.8cm for detention cert
+        'margin_right' => $isDetentionCert ? 28 : 15,
+        'margin_top' => $isDetentionCert ? 25 : 15,    // 2.5cm for detention cert
+        'margin_bottom' => $isDetentionCert ? 25 : 15,
         'tempDir' => sys_get_temp_dir() . '/mpdf',
         'img_dpi' => 96,
         'autoScriptToLang' => true,
@@ -569,3 +763,4 @@ try {
     echo json_encode(["success" => false, "message" => "Error: " . $e->getMessage()]);
     exit();
 }
+?>
