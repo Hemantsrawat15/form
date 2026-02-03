@@ -30,23 +30,25 @@ if (empty($data->group_name)) {
     exit();
 }
 
-// Updated query - now using created_by instead of user_id
-$query = "INSERT INTO groups (created_by, group_name, description) VALUES (?, ?, ?)";
+// --- THE FIX ---
+// Added is_deleted to the INSERT query
+$query = "INSERT INTO id_group (name, fullname, is_deleted) VALUES (?, ?, ?)";
 
 try {
     $stmt = $conn->prepare($query);
     
     $group_name = htmlspecialchars(strip_tags($data->group_name));
     $description = isset($data->description) ? htmlspecialchars(strip_tags($data->description)) : '';
+    $is_deleted = 'no'; // Explicitly set this
     
-    // Store who created it, but don't restrict access
-    $stmt->bind_param("iss", $user_id, $group_name, $description);
+    // Updated bind_param to "sss" (3 strings)
+    $stmt->bind_param("sss", $group_name, $description, $is_deleted);
     
     if ($stmt->execute()) {
         http_response_code(201);
         echo json_encode([
             "success" => true, 
-            "message" => "Group created successfully. This group is now accessible to all users.",
+            "message" => "Group created successfully.",
             "group_id" => $conn->insert_id
         ]);
     } else {

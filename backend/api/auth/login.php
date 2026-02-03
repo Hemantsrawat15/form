@@ -24,7 +24,7 @@ if (empty($data->email) || empty($data->password)) {
 $email = $conn->real_escape_string($data->email);
 $password = $data->password;
 
-$query = "SELECT id, email, password_hash FROM users WHERE email = ?";
+$query = "SELECT id, email_id, password, first_name, last_name, user_type FROM id_emp WHERE email_id = ? AND is_deleted = 'no' AND status = 1";
 $stmt = $conn->prepare($query);
 $stmt->bind_param("s", $email);
 $stmt->execute();
@@ -32,14 +32,26 @@ $result = $stmt->get_result();
 $user = $result->fetch_assoc();
 $conn->close();
 
-if ($user && password_verify($password, $user['password_hash'])) {
+if ($user && password_verify($password, $user['password'])) {
     $jwt = new JwtHandler();
-    $token = $jwt->encode(["user_id" => $user['id']]);
+    $token = $jwt->encode([
+        "user_id" => $user['id'],
+        "user_type" => $user['user_type'],
+        "email" => $user['email_id']
+    ]);
 
     http_response_code(200);
     echo json_encode([
-        "success" => true, "message" => "Login successful.",
-        "token" => $token, "user" => ["id" => $user['id'], "email" => $user['email']]
+        "success" => true, 
+        "message" => "Login successful.",
+        "token" => $token, 
+        "user" => [
+            "id" => $user['id'], 
+            "email" => $user['email_id'],
+            "first_name" => $user['first_name'],
+            "last_name" => $user['last_name'],
+            "user_type" => $user['user_type']
+        ]
     ]);
 } else {
     http_response_code(401);

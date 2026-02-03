@@ -17,15 +17,15 @@ if (!$user_id) {
 $db = new Database();
 $conn = $db->getConnection();
 
-// Modified query to show ALL groups with creator information
-$query = "SELECT g.id, g.group_name, g.description, g.created_by, 
-          u.username as creator_username, u.full_name as creator_name,
+// --- THE FIX ---
+// Changed WHERE clause to allow 'no', NULL, or empty string
+$query = "SELECT g.id, g.name as group_name, g.fullname, 
           COUNT(f.id) as form_count
-          FROM groups g
-          LEFT JOIN users u ON g.created_by = u.id
+          FROM id_group g
           LEFT JOIN forms f ON g.id = f.group_id
+          WHERE (g.is_deleted = 'no' OR g.is_deleted IS NULL OR g.is_deleted = '')
           GROUP BY g.id 
-          ORDER BY g.group_name";
+          ORDER BY g.name";
 
 $result = $conn->query($query);
 $groups = $result->fetch_all(MYSQLI_ASSOC);
